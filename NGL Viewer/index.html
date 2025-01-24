@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NGL Viewer Library - Simple Loader Molecule</title>
+    <script src="./build/js/ngl.dev.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #viewport {
+            width: 80%;
+            height: 600px;
+            margin-top: 20px;
+            border: 1px solid #ddd;
+        }
+        #controls {
+            margin: 20px;
+        }
+        input, button {
+            padding: 10px;
+            font-size: 14px;
+        }
+        button {
+            margin-left: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>NGL Viewer knižnica</h1>
+    <div id="controls">
+        <input type="text" id="urlInput" placeholder="Zadajte PDB URL (napr., https://files.rcsb.org/view/1CRN.pdb)" size="50">
+        <button onclick="loadMolecule()">Načítaj molekulu</button>
+    </div>
+    <div id="viewport"></div>
+
+    <script>
+        const stage = new NGL.Stage("viewport");
+
+        function loadMolecule() {
+            const pdbUrl = document.getElementById("urlInput").value.trim();
+
+            if (!pdbUrl) {
+                alert("Prosim zadajte správnu PDB URL.");
+                return;
+            }
+
+            stage.removeAllComponents();
+
+            stage.loadFile(pdbUrl).then((component) => {
+                component.addRepresentation("cartoon", {
+                    color: "grey"
+                });
+
+                component.addRepresentation("cartoon", {
+                    sele: "resi 16-19",
+                    color: "blue"
+                });
+
+                component.addRepresentation("cartoon", {
+                    sele: "resi 17-20",
+                    color: "red"
+                });
+
+                component.addRepresentation("ball+stick", {
+                    sele: "resi 25",
+                    color: "yellow"
+                });
+
+                stage.autoView();
+            }).catch((error) => {
+                console.error("Error prinačitávaní moleculy:", error);
+            });
+        }
+
+        window.addEventListener("resize", () => stage.handleResize());
+    </script>
+</body>
+</html>

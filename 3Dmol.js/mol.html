@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Molecule Viewer - Knižnica</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="https://3dmol.org/build/3Dmol-min.js"></script>
+</head>
+<body>
+    <h1>3D Molecule Viewer - Knižnica</h1>
+    <div id="viewer-container">
+        <input type="text" id="pdb-url" placeholder="Zadajte URL PDB súboru (napr. https://files.rcsb.org/download/1CRN.pdb)">
+        <button id="load-button">Načítať molekulu</button>
+        <button id="export-button">Exportovať ako PNG</button>
+        <div id="viewer"></div>
+        <div id="atom-info">Prejdite myšou na molekulu, aby sa zobrazili informácie o jednotlivých atómoch.</div>
+    </div>
+
+    <script>
+        const element = document.getElementById('viewer');
+        const atomInfo = document.getElementById('atom-info'); 
+        const pdbInput = document.getElementById('pdb-url'); 
+        const loadButton = document.getElementById('load-button');
+        const exportButton = document.getElementById('export-button');
+        const config = { backgroundColor: "white" };
+        const viewer = $3Dmol.createViewer(element, config);
+        var cisloResidia = 25;
+
+        // Načítanie molekuly
+        function loadMolecule(url) {
+            jQuery.ajax(url, {
+                success: function(data) {
+                    console.log("PDB súbor úspešne načítaný.");
+                    viewer.clear();
+                    const model = viewer.addModel(data, "pdb");
+
+                    // Nastavenie základného štýlu
+                    viewer.setStyle({}, { cartoon: { color: 'lightgrey' } });
+
+                    // Zvýraznenie rezídia 25 na modro
+                    viewer.setStyle({ resi: cisloResidia }, { cartoon: { color: 'blue' } });
+
+                    // Pridanie interakcie na hover
+                    viewer.setHoverable({}, true, function(atom, viewer, event, container) {
+                        if (!atom) return;
+
+                        // Zvýraznenie aktuálneho atómu na ktorom je kurzor
+                        viewer.setStyle({ serial: atom.serial }, { cartoon: { color: 'red' } });
+                        viewer.render();
+
+                        // Zobrazenie informácií o atóme 
+                        atomInfo.innerHTML = `
+                            <strong>Prvok:</strong> ${atom.elem}<br>
+                            <strong>Sériové číslo:</strong> ${atom.serial}<br>
+                            <strong>Rezíduum:</strong> ${atom.resn} (${atom.resi})<br>
+                            <strong>Reťazec:</strong> ${atom.chain}<br>
+                        `;
+                    }, function(atom, viewer) {
+                        if (!atom) return;
+                        viewer.setStyle({ serial: atom.serial }, { cartoon: { color: 'lightgrey' } });
+                        viewer.setStyle({ resi: cisloResidia }, { cartoon: { color: 'blue' } });
+                        viewer.render();
+                        atomInfo.innerHTML = "Prejdite myšou na molekulu, aby sa zobrazili informácie o jednotlivých atómoch.";
+                    });
+                    viewer.zoomTo();
+                    viewer.render();
+                },
+                error: function(hdr, status, err) {
+                    console.error("Nepodarilo sa načítať PDB súbor " + url + ": " + err);
+                },
+            });
+        }
+
+        loadButton.addEventListener('click', function() {
+            const url = pdbInput.value.trim();
+            if (url) {
+                loadMolecule(url);
+            } else {
+                alert("Zadajte platnú URL PDB súboru.");
+            }
+        });
+
+        // Exportovanie modelu ako PNG
+        exportButton.addEventListener('click', function() {
+            const imageURI = viewer.pngURI(); // Získanie URI PNG
+            const link = document.createElement('a');
+            link.href = imageURI;
+            link.download = '3dmolecule.png'; // Názov exportovaného súboru
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+    </script>
+</body>
+</html>

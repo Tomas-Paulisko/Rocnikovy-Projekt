@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="sk">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+        <title>Mol* Viewer</title>
+        <link rel="stylesheet" type="text/css" href="styles.css">
+        <script type="text/javascript" src="./index.js"></script>
+    </head>
+    <body>
+        <h1 id="nadpis"> Mol* Viewer</h1>
+        <div id="controls">
+            <input type="text" id="urlInput" value="https://files.rcsb.org/download/1cbs.pdb" />
+            <button id="loadButton">Načítať molekulu</button>
+        </div>
+        <div id="app"></div>
+        <script>
+            var PluginWrapper = new MolStarProteopediaWrapper();
+
+            // Inicializácia pluginu
+            PluginWrapper.init('app').then(() => {
+                PluginWrapper.setBackground(0xffffff); 
+
+                document.getElementById('loadButton').addEventListener('click', () => {
+                    const url = document.getElementById('urlInput').value.trim();
+                    if (!url) {
+                        alert('Zadajte platné URL molekuly!');
+                        return;
+                    }
+
+                    // Určenie formátu podľa koncovky súboru
+                    let format = 'pdb';
+                    if (url.endsWith('.cif')) {
+                        format = 'cif';
+                    }
+
+                    // Načítanie molekuly
+                    PluginWrapper.load({
+                        url: url,
+                        format: format,
+                        isBinary: format === 'cif', 
+                    })
+                        .then(() => {
+                            console.log('Molekula úspešne načítaná z:', url);
+                        })
+                        .catch((err) => {
+                            console.error('Chyba pri načítaní molekuly:', err);
+                            alert('Chyba pri načítaní molekuly. Skontrolujte URL a formát súboru.');
+                        });
+                });
+            });
+        </script>
+    </body>
+</html>
